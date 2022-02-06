@@ -156,7 +156,7 @@ public class ClientConnectionBuilder extends CommonBuilder<ClientConnectionBuild
             socket.bind(new InetSocketAddress(localAddr, localPort));
         }
         socket.connect(new InetSocketAddress(address, port), settings.getConnectionTimeout());
-        return new Connection(socket, null, new ConnectionSettings(settings));
+        return new Connection(socket, null, new ConnectionSettings(settings)).start();
     }
 
 }

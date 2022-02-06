@@ -94,6 +94,8 @@ public class Connection implements AutoCloseable {
     private volatile boolean closed;
     private volatile boolean stopped = true;
 
+    private final ConnectionReader connectionReader;
+
     private final ConnectionSettings settings;
     private ConnectionEventListener aSduListener;
     private ConnectionEventListener aSduListenerBack;
@@ -414,8 +416,7 @@ public class Connection implements AutoCloseable {
             startdtActSignal = new CountDownLatch(1);
         }
 
-        ConnectionReader connectionReader = new ConnectionReader();
-        connectionReader.start();
+        connectionReader = new ConnectionReader();
 
         this.maxTimeNoTestConReceived = new MaxTimeNoAckReceivedTimer();
         this.maxTimeNoAckReceived = new MaxTimeNoAckReceivedTimer();
@@ -432,6 +433,11 @@ public class Connection implements AutoCloseable {
 
         this.timeoutManager = new TimeoutManager();
         this.executor.execute(this.timeoutManager);
+    }
+
+    public Connection start() {
+        connectionReader.start();
+        return this;
     }
 
     /**
