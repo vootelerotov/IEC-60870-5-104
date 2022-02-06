@@ -25,6 +25,18 @@ import java.util.EventListener;
 
 public interface ServerEventListener extends EventListener {
 
+
+    /**
+     * Called on when connection has been created and before it has started reading the underlying socket
+     */
+    default void onConnectionCreated(Connection connection) {
+
+    }
+
+    /**
+     *  Called after the ConnectionReader has been started
+     *
+     */
     void connectionIndication(Connection connection);
 
     /**
