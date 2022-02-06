@@ -6,4 +6,4 @@ Based on version 1.4.0 of j60870.
 
 # License
 
-Licesed under [GPL 3.0](licence/gpl-3.0.txt)
+Licesed under [GPL 3.0](license/gpl-3.0.txt)
