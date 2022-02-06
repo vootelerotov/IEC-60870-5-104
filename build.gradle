@@ -52,7 +52,7 @@ configure(javaProjects) {
 
   if (!project.properties.containsKey('cfgJavaVersion')) {
     project.ext {
-      cfgJavaVersion = '1.7'
+      cfgJavaVersion = '8'
     }
   }
 
