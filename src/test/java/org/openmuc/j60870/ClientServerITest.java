@@ -417,9 +417,17 @@ public class ClientServerITest {
 
     @Test
     public void testClientServerCom() throws Exception {
+        testClientServerCom(new ServerlisnerImpl());
+    }
 
+    @Test
+    public void testClientServerCommunicationWithSlowServerListener() throws Exception {
+        testClientServerCom(new SlowServerEventListener());
+    }
+
+    private void testClientServerCom(ServerEventListener serverListener) throws Exception {
         serverSap = Server.builder().setPort(PORT).build();
-        serverSap.start(new ServerlisnerImpl());
+        serverSap.start(serverListener);
 
         try (Connection clientConnection = new ClientConnectionBuilder("127.0.0.1").setPort(PORT).build()) {
 
@@ -463,7 +471,6 @@ public class ClientServerITest {
         } finally {
             serverSap.stop();
         }
-
     }
 
     private class ServerlisnerMultiThreadImpl implements ServerEventListener {
@@ -511,6 +518,35 @@ public class ClientServerITest {
         }
 
     }
+
+
+    private class SlowServerEventListener implements ServerEventListener {
+
+        @Override
+        public void onConnectionCreated(Connection connection) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            serverConnection = connection;
+            serverConnection.setConnectionListener(new ServerReceiver());
+        }
+
+        @Override
+        public void connectionIndication(Connection connection) {
+        }
+
+        @Override
+        public void serverStoppedListeningIndication(IOException e) {
+        }
+
+        @Override
+        public void connectionAttemptFailed(IOException e) {
+        }
+
+    }
+
 
     private class ConnectionListenerMultiThreadImpl implements ConnectionEventListener {
 

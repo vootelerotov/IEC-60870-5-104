@@ -61,15 +61,16 @@ class ServerThread implements Runnable {
             Thread.currentThread().setName("ConnectionHandler");
             Connection serverConnection;
             try {
-                serverConnection = new Connection(socket, serverThread, settings).start();
+                serverConnection = new Connection(socket, serverThread, settings);
+                serverSapListener.onConnectionCreated(serverConnection);
+                serverConnection.start();
+                serverSapListener.connectionIndication(serverConnection);
             } catch (IOException e) {
                 synchronized (ServerThread.this) {
                     numConnections--;
                 }
                 serverSapListener.connectionAttemptFailed(e);
-                return;
             }
-            serverSapListener.connectionIndication(serverConnection);
         }
     }
 
