@@ -685,6 +685,7 @@ public class Connection implements AutoCloseable {
         if (serverThread != null) {
             serverThread.connectionClosedSignal();
         }
+        timeoutManager.cancel();
     }
 
     /**
