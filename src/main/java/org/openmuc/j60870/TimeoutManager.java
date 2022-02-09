@@ -71,8 +71,9 @@ class TimeoutManager implements Runnable {
                     }
                     currTask = queue.take();
                 }
-
-                currTask.manExec();
+                if (!canceled) {
+                    currTask.manExec();
+                }
             } catch (InterruptedException e) {
                 // Restore interrupted state...
                 Thread.currentThread().interrupt();
