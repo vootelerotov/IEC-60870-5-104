@@ -26,6 +26,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -423,6 +425,70 @@ public class ClientServerITest {
     @Test
     public void testClientServerCommunicationWithSlowServerListener() throws Exception {
         testClientServerCom(new SlowServerEventListener());
+    }
+
+    @Test
+    public void givenSharedThreadPoolThenConnectionClosedIsCalledOnlyOnePerConnection() throws Exception {
+        AtomicInteger timesConnectionClosedCalled = new AtomicInteger(0);
+
+        serverSap = Server.builder()
+            .setMaxIdleTime((int) Duration.ofSeconds(1).toMillis()) // to make test shorter (minimum value)
+            .setMaxTimeNoAckReceived((int) Duration.ofSeconds(1).toMillis()) // to make test shorter (minimum value)
+            .useSharedThreadPool()
+            .setPort(PORT)
+            .build();
+
+        serverSap.start(new ServerEventListener() {
+            @Override
+            public void onConnectionCreated(Connection connection) {
+                connection.setConnectionListener(new ConnectionEventListener() {
+
+                    @Override
+                    public void newASdu(ASdu aSdu) {
+
+                    }
+
+                    @Override
+                    public void connectionClosed(IOException cause) {
+                       timesConnectionClosedCalled.incrementAndGet();
+                    }
+                });
+            }
+
+            @Override
+            public void connectionIndication(Connection connection) {
+            }
+
+            @Override
+            public void serverStoppedListeningIndication(IOException e) {
+
+            }
+
+            @Override
+            public void connectionAttemptFailed(IOException e) {
+
+            }
+        });
+
+        try (Connection clientConnection = new ClientConnectionBuilder("127.0.0.1").setPort(PORT).build()) {
+            clientConnection.startDataTransfer(new ConnectionListenerImpl(), 5000);
+
+            clientConnection.singleCommand(Util.convertToCommonAddress(63, 203), CauseOfTransmission.ACTIVATION, 1,
+                new IeSingleCommand(true, 3, true));
+
+        }
+        finally {
+            try {
+                Thread.sleep(3000);
+
+                assertEquals(1, timesConnectionClosedCalled.get());
+            }
+            finally {
+                serverSap.stop();
+            }
+        }
+
+
     }
 
     private void testClientServerCom(ServerEventListener serverListener) throws Exception {
