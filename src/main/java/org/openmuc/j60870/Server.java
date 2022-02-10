@@ -22,6 +22,8 @@ package org.openmuc.j60870;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -63,10 +65,12 @@ public class Server {
      * @param listener
      *            the ServerConnectionListener that will be notified when remote clients are connecting or the server
      *            stopped listening.
+     * @return port
+     *            Optional containing local port the server is bound to if known, empty optional otherwise
      * @throws IOException
-     *             if any kind of error occures while creating the server socket.
+     *            if any kind of error occures while creating the server socket.
      */
-    public void start(ServerEventListener listener) throws IOException {
+    public Optional<Integer> start(ServerEventListener listener) throws IOException {
         ConnectionSettings.incremntConnectionsCounter();
         if (this.settings.useSharedThreadPool()) {
             this.exec = ConnectionSettings.getThreadPool();
@@ -74,9 +78,12 @@ public class Server {
         else {
             this.exec = Executors.newCachedThreadPool();
         }
-        serverThread = new ServerThread(serverSocketFactory.createServerSocket(port, backlog, bindAddr), settings,
-                maxConnections, listener, exec);
+        ServerSocket serverSocket = serverSocketFactory.createServerSocket(port, backlog, bindAddr);
+        serverThread = new ServerThread(serverSocket, settings, maxConnections, listener, exec);
         this.exec.execute(this.serverThread);
+
+        return Optional.of(serverSocket.getLocalPort()).map(localPort -> localPort == -1 ? null : localPort);
+
     }
 
     /**
