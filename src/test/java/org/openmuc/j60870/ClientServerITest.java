@@ -27,6 +27,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Assert;
@@ -435,10 +436,10 @@ public class ClientServerITest {
             .setMaxIdleTime((int) Duration.ofSeconds(1).toMillis()) // to make test shorter (minimum value)
             .setMaxTimeNoAckReceived((int) Duration.ofSeconds(1).toMillis()) // to make test shorter (minimum value)
             .useSharedThreadPool()
-            .setPort(PORT)
+            .setPort(0)
             .build();
 
-        serverSap.start(new ServerEventListener() {
+        Optional<Integer> serverPort = serverSap.start(new ServerEventListener() {
             @Override
             public void onConnectionCreated(Connection connection) {
                 connection.setConnectionListener(new ConnectionEventListener() {
@@ -450,7 +451,7 @@ public class ClientServerITest {
 
                     @Override
                     public void connectionClosed(IOException cause) {
-                       timesConnectionClosedCalled.incrementAndGet();
+                        timesConnectionClosedCalled.incrementAndGet();
                     }
                 });
             }
@@ -470,7 +471,9 @@ public class ClientServerITest {
             }
         });
 
-        try (Connection clientConnection = new ClientConnectionBuilder("127.0.0.1").setPort(PORT).build()) {
+        ClientConnectionBuilder clientConnectionBuilder =
+            new ClientConnectionBuilder("127.0.0.1").setPort(serverPort.get());
+        try (Connection clientConnection = clientConnectionBuilder.build()) {
             clientConnection.startDataTransfer(new ConnectionListenerImpl(), 5000);
 
             clientConnection.singleCommand(Util.convertToCommonAddress(63, 203), CauseOfTransmission.ACTIVATION, 1,
