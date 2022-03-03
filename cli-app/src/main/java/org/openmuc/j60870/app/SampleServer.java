@@ -10,6 +10,7 @@ package org.openmuc.j60870.app;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.Optional;
 
 import org.openmuc.j60870.ASdu;
 import org.openmuc.j60870.ASduType;
@@ -134,13 +135,14 @@ public class SampleServer {
         new SampleServer().start();
     }
 
-    public void start() {
+    public Optional<Integer> start() {
         Server server = Server.builder().build();
 
         try {
-            server.start(new ServerListener());
+            return server.start(new ServerListener());
         } catch (IOException e) {
             println("Unable to start listening: \"", e.getMessage(), "\". Will quit.");
+            return Optional.empty();
         }
     }
 
