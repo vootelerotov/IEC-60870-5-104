@@ -106,14 +106,17 @@ public class SampleServer {
         }
 
         @Override
-        public void connectionIndication(Connection connection) {
-
+        public void onConnectionCreated(Connection connection) {
             int myConnectionId = connectionIdCounter++;
             println("A client has connected using TCP/IP. Will listen for a StartDT request. Connection ID: "
                     + myConnectionId);
             println("Started data transfer on connection (" + myConnectionId, ") Will listen for incoming commands.");
 
             connection.setConnectionListener(new ConnectionListener(connection, myConnectionId));
+        }
+
+        @Override
+        public void connectionIndication(Connection connection) {
         }
 
         @Override
